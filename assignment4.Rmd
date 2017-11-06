@@ -16,10 +16,11 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("~/Desktop/github/assignment4-YiranDuMirabelle11/Assistments-confidence.csv")
 
   #We won't need the id variable, so remove that.
-
+library("dplyr")
+D1 <- select(D1,-1)
 
 ```
 
@@ -44,7 +45,7 @@ tl.col="black", tl.cex=0.6, tl.srt=45,
 ## Create a new data frame with the mean_correct variables removed
 
 ```{r}
-D2 <- 
+D2 <- select(D1,-4)
 
 #The, scale and center your data for easier interpretation
 D2 <- scale(D2, center = TRUE)
@@ -75,6 +76,7 @@ plot(pca, type = "lines")
 ```
 
 ## Think about which components you would drop and make a decision
+I adopt the first three components and discard the components starting from the fourth component. The reason is that from the screeplot we know that the first three can explain more than one variance while other components can only explain less than one variance, which is no better than original variables.
 
 ## Part II
 
@@ -85,12 +87,15 @@ D3 <- as.data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-D4 <- cbind(D3, as.data.frame(D1$mean_correct))
+D4 <- cbind(D3, as.data.frame(D1$meano_correct))
 
 #Now re-run your scatterplots and correlations between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
-COR2 <- 
-
+COR2 <- cor(D4)
+corrplot(COR2, order="AOE", method="circle", tl.pos="lt", type="upper",        
+tl.col="black", tl.cex=0.6, tl.srt=45, 
+        addCoef.col="black", addCoefasPercent = TRUE,
+        sig.level=0.50, insig = "blank")
 ```
 ## Now print out the eigenvectors (often called loadings) for the components you generated:
 
@@ -101,9 +106,21 @@ pca$rotation
 
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
-sweep(loadings, 2, colSums(loadings), "/") #sweep() computes each row as a proportion of the column. (There must be a way to do this with dplyr()?)
+sweep(loadings, 2, colSums(loadings), "/")  #sweep() computes each row as a proportion of the column. (There must be a way to do this with dplyr()?)
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+
+
+### PC1 quick learning comprehension
+### Here we notice that PC1 is highly negatively correlated with problems attempted in the current session, the mean of attempts in each problem and the mean hints for the current session. This denotes that the student can quickly understand what each problem means and comprehend the key points in the current session so that the student does not have to ask for many hints or finish too many problems to help understanding.
+
+### PC2 prior knowledge foundation
+### PC2 is highly positively correlated with the number of finished problems in the prior session and especially with the percentage of correctness in the prior session, which means that the students get a good command of the prior session and understand the prior session well.
+
+### PC3 Not confident with learning ability/ confidence in learning ability
+### PC3 is notably negatively correlated with confidence in the current session and at the same time it is also positively correlated with problems attempted in the current session. Overally speaking, this shows that the student is not confident with his learning this session and attempted many problems to confirm his learning.
+
+
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
@@ -114,3 +131,135 @@ biplot(pca)
 ```
 # Part III  
 ## Also in this repository is a data set and codebook from Rod Martin, Patricia Puhlik-Doris, Gwen Larsen, Jeanette Gray, Kelly Weir at the University of Western Ontario about people's sense of humor. Can you perform a PCA on this data?
+
+```{r}
+# read the dataset
+H1 <- read.csv("~/Desktop/github/assignment4-YiranDuMirabelle11/humor_data.csv")
+# Select data into two dataset: one with summarized variable, another with single questions
+H2.1 <- H1[-c(1:32)]
+H3.1 <- H1[-c(33:36)]
+
+
+## Summarized features PCA
+# Generate pairwise correlation
+H2COR <- cor(H2.1)
+
+corrplot(H2COR, order="AOE", method="circle", tl.pos="lt", type="upper",        
+tl.col="black", tl.cex=0.6, tl.srt=45, 
+        addCoef.col="black", addCoefasPercent = TRUE,
+        sig.level=0.50, insig = "blank")
+```
+
+Based on the correlation, I decide to keep all the variables for PCA
+```{r}
+# scale the variables
+H2.1 <- scale(H2.1)
+
+# run PCA
+pcah2 <- prcomp(H2.1)
+```
+
+
+# Then through the variance explanation of each component, we decide on our components:
+
+```{r}
+#sd of the components
+pcah2$sdev
+
+# a summary of pca
+summary(pcah2)
+
+# The screeplot of pca
+plot(pcah2, type = "lines")
+
+```
+
+We choose the first three components whose variance is larger than 1 as they can explaine variance better than original variables.
+
+# Now we see the eignvalues of each component and seek the substantive meaning of each component
+```{r}
+# PCA rotation
+pcah2$rotation
+
+# Create the loading 
+loadingsh2 <- abs(pcah2$rotation)
+
+```
+
+## Substantive meanings of each component:
+
+####It seems very hard to extract substantive meaning of components from these four summarized items. But I tried:
+ 
+### Component 1 Basic humor
+PC1 is evenly correlated with the four summarized features. So we call it overall basic humor.
+
+
+### Component 2 Aggresiveness
+PC2 is negatively correlated with age but positively correlated with gender and aggressiveness. Intuitively, elder people are less aggresive and male are more likely to behave aggresively, or defensively. 
+
+
+### Component 3 self-identiy
+PC3 is correlated with age and neagtively correlated with self-defeating. As people get elder and not very self-defeating, they are less likely to adjust themselve to cater to others' likes. In this sense, this component describes their attention to their feelings.
+
+# If we focus on the questions themselves rather than the summarized features/characteristics
+
+```{r}
+# run the correlation among variables
+H3COR <- cor(H3.1)
+# Since the plot contains too many variables, we do not go for the plot.
+#recode the value so that they are in the same direction 
+H3.1[c(1,9,17,25,29)] <- 6-H3.1[c(1,9,17,25,29)]
+
+# scale the variables
+H3.1 <- scale(H3.1)
+
+# Run PCA
+pcah3 <- prcomp(H3.1, scale= TRUE)
+
+#sd of the components
+pcah3$sdev
+
+# a summary of pca
+summary(pcah3)
+
+# The screeplot of pca
+plot(pcah3, type = "lines")
+
+```
+
+# There are 8 principle component explaining more than one variance. We check the substantive meaning of it.
+
+
+```{r}
+# PCA rotation
+pcah3$rotation
+
+# Create the loading 
+loadingsh3 <- abs(pcah3$rotation)
+
+```
+
+### Component 1 basic humor
+PC1 is evenly correlated with these components, so we call this componet as the basic humor characteristic.
+
+### Component 2 self-defeating
+PC2 is highly correlated with item Q4, Q8, Q12, Q16 and Q20. All these represents that the individual are self-defeating and highly likely to cater to others.
+
+### Component 3 self-identity
+PC3 is highly negatively correlated with item Q15, Q23 and Q24. This shows that the individual pay more attention to himself and focus on his identity.
+
+### Component 4 optimistic/self-encouraging
+PC4 is correlated with some encouraging items such as Q10, Q11, Q18 and negatively correlated with Q17. Therefore, the individual does some self-encouraging things and are optimistic.
+
+### Component 5 emotional
+PC5 is correlated with item Q16, Q21,Q22 and Q23 which shows that the individual is emotional. They follow their feelings and emotions.
+
+### Component 6 avoidence
+PC6 is negatively correlated with Q9 and Q28. The individual usually like to avoid to show his real feeling and avoid fearness.
+
+### Component 7 serious
+PC7 is negatively correlated with item Q5, Q23 and positively with Q13 and Q25, which shows that the individual are pretty serious towards everything.
+### Component 8 open-minded & fun
+PC8 is correlated with Q6 & Q26 and negatively with Q25. This shows that the individual is open-minded and are very likely to make fun of oneself.
+
+Compared to PCA with summarized features, here we get more detailes components. Methods to do PCA have a lot to do with on what level and how we treat our raw data. In this case, if we want to get more general answers, we can do PCA on summarized feature level by combining some data. If we want to explore more and get more detailed result, it will do extra good to do PCA directly with the question answers.
