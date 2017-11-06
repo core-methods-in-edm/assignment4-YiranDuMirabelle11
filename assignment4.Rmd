@@ -263,3 +263,23 @@ PC7 is negatively correlated with item Q5, Q23 and positively with Q13 and Q25, 
 PC8 is correlated with Q6 & Q26 and negatively with Q25. This shows that the individual is open-minded and are very likely to make fun of oneself.
 
 Compared to PCA with summarized features, here we get more detailes components. Methods to do PCA have a lot to do with on what level and how we treat our raw data. In this case, if we want to get more general answers, we can do PCA on summarized feature level by combining some data. If we want to explore more and get more detailed result, it will do extra good to do PCA directly with the question answers.
+
+
+```{r}
+# Check the PC from our PCA and the four summarized features.
+
+H3.2 <- as.data.frame(pcah3$x)
+
+H3.3 <- cbind(H3.2, H2.1)
+H3.3 <- H3.3[-c(9:35)]
+#Now re-run the scatterplots and correlations between the transformed data and summarized feature.
+
+CORH3 <- cor(H3.3)
+
+corrplot(CORH3, method="circle", tl.pos="lt", type="upper",        
+tl.col="black", tl.cex=0.6, tl.srt=45, 
+        addCoef.col="black", addCoefasPercent = TRUE,
+        sig.level=0.50, insig = "blank")
+```
+
+The four summarized features capture pretty much some important parts but also overlap with each other. It seems that affiliative, selfenhancing and selfdefeating are highly correlated with PC1 so a large proportion of these three features overlap with each other. It is the same case with PC2 and PC4. Therefore, PCA is better than the four simplified version features.
